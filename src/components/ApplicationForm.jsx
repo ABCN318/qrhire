@@ -6,7 +6,8 @@ function ApplicationForm({ jobId }) {
     name: '',
     contactPreference: 'email',
     contactInfo: '',
-    experience: ''
+    experience: '',
+    speaksSpanish: ''
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -55,7 +56,8 @@ function ApplicationForm({ jobId }) {
       name: formData.name.trim(),
       contactPreference: formData.contactPreference,
       contactInfo: formData.contactInfo.trim(),
-      experience: formData.experience.trim()
+      experience: formData.experience.trim(),
+      speaksSpanish: formData.speaksSpanish
     }
 
     saveApplicant(applicant)
@@ -148,6 +150,36 @@ function ApplicationForm({ jobId }) {
           onChange={handleChange}
           placeholder="Tell us about your previous work experience, skills, or relevant background..."
         />
+      </div>
+
+      <div className="form-group">
+        <label>Do you speak Spanish? *</label>
+        <div className="radio-group">
+          <div className="radio-option">
+            <input
+              type="radio"
+              id="spanish-yes"
+              name="speaksSpanish"
+              value="yes"
+              checked={formData.speaksSpanish === 'yes'}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="spanish-yes">Yes</label>
+          </div>
+          <div className="radio-option">
+            <input
+              type="radio"
+              id="spanish-no"
+              name="speaksSpanish"
+              value="no"
+              checked={formData.speaksSpanish === 'no'}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="spanish-no">No</label>
+          </div>
+        </div>
       </div>
 
       <div style={{ marginTop: '20px' }}>

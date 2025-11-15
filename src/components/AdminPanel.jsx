@@ -37,7 +37,8 @@ function AdminPanel({ onLogout }) {
       applicant.name.toLowerCase().includes(searchTerm) ||
       applicant.contactInfo.toLowerCase().includes(searchTerm) ||
       applicant.jobId.toLowerCase().includes(searchTerm) ||
-      applicant.experience.toLowerCase().includes(searchTerm)
+      applicant.experience.toLowerCase().includes(searchTerm) ||
+      (applicant.speaksSpanish && applicant.speaksSpanish.toLowerCase().includes(searchTerm))
     )
   })
 
@@ -138,6 +139,7 @@ function AdminPanel({ onLogout }) {
                 <th>Contact</th>
                 <th>Contact Info</th>
                 <th>Job ID</th>
+                <th>Speaks Spanish</th>
                 <th>Experience</th>
                 <th>Applied At</th>
                 <th>Actions</th>
@@ -150,6 +152,15 @@ function AdminPanel({ onLogout }) {
                   <td>{applicant.contactPreference === 'email' ? '📧 Email' : '📞 Phone'}</td>
                   <td>{applicant.contactInfo}</td>
                   <td><code>{applicant.jobId}</code></td>
+                  <td>
+                    {applicant.speaksSpanish === 'yes' ? (
+                      <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Yes</span>
+                    ) : applicant.speaksSpanish === 'no' ? (
+                      <span style={{ color: '#dc3545' }}>❌ No</span>
+                    ) : (
+                      <span style={{ color: '#999' }}>—</span>
+                    )}
+                  </td>
                   <td>
                     {applicant.experience ? (
                       <details>
