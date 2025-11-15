@@ -9,10 +9,31 @@ export const saveApplicant = (applicant) => {
     appliedAt: new Date().toISOString()
   };
   applicants.push(newApplicant);
+  const oldValue = localStorage.getItem('applicants');
   localStorage.setItem('applicants', JSON.stringify(applicants));
   
   // Dispatch custom event to notify other components (same tab)
-  window.dispatchEvent(new Event('applicantSaved'));
+  // This works across routes in the same tab
+  window.dispatchEvent(new CustomEvent('applicantSaved', {
+    detail: { applicant: newApplicant, applicants: applicants }
+  }));
+  
+  // Also dispatch a storage-like event for better compatibility
+  // Note: Native storage events only fire for cross-tab changes,
+  // but this custom event helps with same-tab route changes
+  try {
+    const storageEvent = new StorageEvent('storage', {
+      key: 'applicants',
+      newValue: JSON.stringify(applicants),
+      oldValue: oldValue,
+      storageArea: localStorage,
+      url: window.location.href
+    });
+    window.dispatchEvent(storageEvent);
+  } catch (e) {
+    // StorageEvent constructor might not work in all browsers
+    // The custom event above should still work
+  }
   
   return newApplicant;
 };

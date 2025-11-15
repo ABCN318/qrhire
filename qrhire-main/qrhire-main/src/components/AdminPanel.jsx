@@ -10,7 +10,7 @@ function AdminPanel({ onLogout }) {
   useEffect(() => {
     loadApplicants()
 
-    // Listen for storage changes (e.g., when a new application is submitted)
+    // Listen for storage changes (e.g., when a new application is submitted from another tab/window)
     const handleStorageChange = (e) => {
       if (e.key === 'applicants' || e.key === null) {
         loadApplicants()
@@ -29,10 +29,17 @@ function AdminPanel({ onLogout }) {
     }
     window.addEventListener('focus', handleFocus)
 
+    // Periodic refresh as a fallback (every 3 seconds when admin panel is active)
+    // This ensures we catch any applications even if events don't fire
+    const refreshInterval = setInterval(() => {
+      loadApplicants()
+    }, 3000)
+
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('applicantSaved', loadApplicants)
       window.removeEventListener('focus', handleFocus)
+      clearInterval(refreshInterval)
     }
   }, [])
 
