@@ -20,7 +20,7 @@ function ApplicationForm({ jobId }) {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -60,8 +60,13 @@ function ApplicationForm({ jobId }) {
       speaksSpanish: formData.speaksSpanish
     }
 
-    saveApplicant(applicant)
-    setSubmitted(true)
+    try {
+      await saveApplicant(applicant)
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Error saving applicant:', error)
+      setError('Failed to submit application. Please try again.')
+    }
   }
 
   if (submitted) {

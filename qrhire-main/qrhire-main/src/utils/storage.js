@@ -1,56 +1,151 @@
-// Simple JSON file-based storage for applicants
-// In a real app, this would use a backend API, but for simplicity we use localStorage
+// Cloud storage using Vercel serverless function
+// This allows data to be shared across different devices/browsers
 
-export const saveApplicant = (applicant) => {
-  const applicants = getApplicants();
+const API_URL = '/api/applicants';
+
+// Fallback to localStorage if API fails
+const useLocalStorage = true;
+
+export const saveApplicant = async (applicant) => {
   const newApplicant = {
     ...applicant,
     id: Date.now().toString(),
     appliedAt: new Date().toISOString()
   };
-  applicants.push(newApplicant);
-  const oldValue = localStorage.getItem('applicants');
-  localStorage.setItem('applicants', JSON.stringify(applicants));
-  
-  // Dispatch custom event to notify other components (same tab)
-  // This works across routes in the same tab
-  window.dispatchEvent(new CustomEvent('applicantSaved', {
-    detail: { applicant: newApplicant, applicants: applicants }
-  }));
-  
-  // Also dispatch a storage-like event for better compatibility
-  // Note: Native storage events only fire for cross-tab changes,
-  // but this custom event helps with same-tab route changes
+
   try {
-    const storageEvent = new StorageEvent('storage', {
-      key: 'applicants',
-      newValue: JSON.stringify(applicants),
-      oldValue: oldValue,
-      storageArea: localStorage,
-      url: window.location.href
+    // Get existing applicants
+    const existingApplicants = await getApplicants();
+    const updatedApplicants = [...existingApplicants, newApplicant];
+
+    // Save to cloud API
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newApplicant)
     });
-    window.dispatchEvent(storageEvent);
-  } catch (e) {
-    // StorageEvent constructor might not work in all browsers
-    // The custom event above should still work
+
+    if (!response.ok) {
+      throw new Error('Failed to save to API');
+    }
+
+    // Also save to localStorage as backup
+    if (useLocalStorage) {
+      localStorage.setItem('applicants', JSON.stringify(updatedApplicants));
+    }
+    
+    // Dispatch event for same-tab updates
+    window.dispatchEvent(new CustomEvent('applicantSaved', {
+      detail: { applicant: newApplicant, applicants: updatedApplicants }
+    }));
+
+    return newApplicant;
+  } catch (error) {
+    console.error('Error saving to API:', error);
+    
+    // Fallback to localStorage
+    const applicants = JSON.parse(localStorage.getItem('applicants') || '[]');
+    applicants.push(newApplicant);
+    localStorage.setItem('applicants', JSON.stringify(applicants));
+    
+    window.dispatchEvent(new CustomEvent('applicantSaved', {
+      detail: { applicant: newApplicant, applicants: applicants }
+    }));
+
+    return newApplicant;
   }
-  
-  return newApplicant;
 };
 
-export const getApplicants = () => {
-  const stored = localStorage.getItem('applicants');
-  return stored ? JSON.parse(stored) : [];
+export const getApplicants = async () => {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch from API');
+    }
+
+    const applicants = await response.json();
+
+    // Also update localStorage as backup
+    if (useLocalStorage) {
+      localStorage.setItem('applicants', JSON.stringify(applicants));
+    }
+
+    return applicants || [];
+  } catch (error) {
+    console.error('Error fetching from API:', error);
+    
+    // Fallback to localStorage
+    const stored = localStorage.getItem('applicants');
+    return stored ? JSON.parse(stored) : [];
+  }
 };
 
-export const deleteApplicant = (id) => {
-  const applicants = getApplicants();
-  const filtered = applicants.filter(app => app.id !== id);
-  localStorage.setItem('applicants', JSON.stringify(filtered));
-  return filtered;
+export const deleteApplicant = async (id) => {
+  try {
+    const applicants = await getApplicants();
+    const filtered = applicants.filter(app => app.id !== id);
+
+    // Update cloud API
+    const response = await fetch(`${API_URL}?id=${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete from API');
+    }
+
+    // Also update localStorage
+    if (useLocalStorage) {
+      localStorage.setItem('applicants', JSON.stringify(filtered));
+    }
+
+    return filtered;
+  } catch (error) {
+    console.error('Error deleting from API:', error);
+    
+    // Fallback to localStorage
+    const applicants = JSON.parse(localStorage.getItem('applicants') || '[]');
+    const filtered = applicants.filter(app => app.id !== id);
+    localStorage.setItem('applicants', JSON.stringify(filtered));
+
+    return filtered;
+  }
 };
 
-export const clearAllApplicants = () => {
-  localStorage.removeItem('applicants');
+export const clearAllApplicants = async () => {
+  try {
+    // Clear cloud API
+    const response = await fetch(API_URL, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to clear API');
+    }
+
+    // Also clear localStorage
+    if (useLocalStorage) {
+      localStorage.removeItem('applicants');
+    }
+  } catch (error) {
+    console.error('Error clearing API:', error);
+    
+    // Fallback to localStorage
+    localStorage.removeItem('applicants');
+  }
 };
 

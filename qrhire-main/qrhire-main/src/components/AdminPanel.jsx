@@ -43,22 +43,22 @@ function AdminPanel({ onLogout }) {
     }
   }, [])
 
-  const loadApplicants = () => {
-    const allApplicants = getApplicants()
+  const loadApplicants = async () => {
+    const allApplicants = await getApplicants()
     setApplicants(allApplicants)
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this application?')) {
-      deleteApplicant(id)
-      loadApplicants()
+      await deleteApplicant(id)
+      await loadApplicants()
     }
   }
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (window.confirm('Are you sure you want to delete ALL applications? This cannot be undone.')) {
-      clearAllApplicants()
-      loadApplicants()
+      await clearAllApplicants()
+      await loadApplicants()
     }
   }
 
