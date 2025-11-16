@@ -11,6 +11,7 @@ function ApplicationForm({ jobId }) {
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -20,18 +21,21 @@ function ApplicationForm({ jobId }) {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
     // Validation
     if (!formData.name.trim()) {
       setError('Please enter your name')
+      setLoading(false)
       return
     }
 
     if (!formData.contactInfo.trim()) {
       setError(`Please enter your ${formData.contactPreference}`)
+      setLoading(false)
       return
     }
 
@@ -40,28 +44,37 @@ function ApplicationForm({ jobId }) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.contactInfo)) {
         setError('Please enter a valid email address')
+        setLoading(false)
         return
       }
     } else {
       const phoneRegex = /^[\d\s\-\+\(\)]+$/
       if (!phoneRegex.test(formData.contactInfo) || formData.contactInfo.replace(/\D/g, '').length < 10) {
         setError('Please enter a valid phone number')
+        setLoading(false)
         return
       }
     }
 
-    // Save applicant
-    const applicant = {
-      jobId,
-      name: formData.name.trim(),
-      contactPreference: formData.contactPreference,
-      contactInfo: formData.contactInfo.trim(),
-      experience: formData.experience.trim(),
-      speaksSpanish: formData.speaksSpanish
-    }
+    try {
+      // Save applicant
+      const applicant = {
+        jobId,
+        name: formData.name.trim(),
+        contactPreference: formData.contactPreference,
+        contactInfo: formData.contactInfo.trim(),
+        experience: formData.experience.trim(),
+        speaksSpanish: formData.speaksSpanish
+      }
 
-    saveApplicant(applicant)
-    setSubmitted(true)
+      await saveApplicant(applicant)
+      setSubmitted(true)
+    } catch (err) {
+      setError('Failed to submit application. Please try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (submitted) {
@@ -183,8 +196,8 @@ function ApplicationForm({ jobId }) {
       </div>
 
       <div style={{ marginTop: '20px' }}>
-        <button type="submit" className="btn">
-          Submit Application
+        <button type="submit" className="btn" disabled={loading}>
+          {loading ? 'Submitting...' : 'Submit Application'}
         </button>
       </div>
     </form>

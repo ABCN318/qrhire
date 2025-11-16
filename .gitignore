@@ -27,3 +27,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Database
+applicants.db
+applicants.db-journal
+

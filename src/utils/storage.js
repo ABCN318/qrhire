@@ -1,31 +1,82 @@
-// Simple JSON file-based storage for applicants
-// In a real app, this would use a backend API, but for simplicity we use localStorage
+// API-based storage for applicants
+// Uses backend API to store data in SQLite database
 
-export const saveApplicant = (applicant) => {
-  const applicants = getApplicants();
-  const newApplicant = {
-    ...applicant,
-    id: Date.now().toString(),
-    appliedAt: new Date().toISOString()
-  };
-  applicants.push(newApplicant);
-  localStorage.setItem('applicants', JSON.stringify(applicants));
-  return newApplicant;
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+export const saveApplicant = async (applicant) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/applicants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(applicant),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save applicant');
+    }
+
+    const newApplicant = await response.json();
+    return newApplicant;
+  } catch (error) {
+    console.error('Error saving applicant:', error);
+    throw error;
+  }
 };
 
-export const getApplicants = () => {
-  const stored = localStorage.getItem('applicants');
-  return stored ? JSON.parse(stored) : [];
+export const getApplicants = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/applicants`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch applicants');
+    }
+
+    const applicants = await response.json();
+    return applicants;
+  } catch (error) {
+    console.error('Error fetching applicants:', error);
+    // Return empty array on error to prevent app crash
+    return [];
+  }
 };
 
-export const deleteApplicant = (id) => {
-  const applicants = getApplicants();
-  const filtered = applicants.filter(app => app.id !== id);
-  localStorage.setItem('applicants', JSON.stringify(filtered));
-  return filtered;
+export const deleteApplicant = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/applicants/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete applicant');
+    }
+
+    // Return updated list
+    return await getApplicants();
+  } catch (error) {
+    console.error('Error deleting applicant:', error);
+    throw error;
+  }
 };
 
-export const clearAllApplicants = () => {
-  localStorage.removeItem('applicants');
+export const clearAllApplicants = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/applicants`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to clear applicants');
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Error clearing applicants:', error);
+    throw error;
+  }
 };
 

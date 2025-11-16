@@ -9,24 +9,41 @@ function AdminPanel({ onLogout }) {
 
   useEffect(() => {
     loadApplicants()
+    // Refresh applicants every 3 seconds to see new applications in real-time
+    const interval = setInterval(loadApplicants, 3000)
+    return () => clearInterval(interval)
   }, [])
 
-  const loadApplicants = () => {
-    const allApplicants = getApplicants()
-    setApplicants(allApplicants)
-  }
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this application?')) {
-      deleteApplicant(id)
-      loadApplicants()
+  const loadApplicants = async () => {
+    try {
+      const allApplicants = await getApplicants()
+      setApplicants(allApplicants)
+    } catch (error) {
+      console.error('Error loading applicants:', error)
     }
   }
 
-  const handleClearAll = () => {
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this application?')) {
+      try {
+        await deleteApplicant(id)
+        await loadApplicants()
+      } catch (error) {
+        alert('Failed to delete applicant. Please try again.')
+        console.error(error)
+      }
+    }
+  }
+
+  const handleClearAll = async () => {
     if (window.confirm('Are you sure you want to delete ALL applications? This cannot be undone.')) {
-      clearAllApplicants()
-      loadApplicants()
+      try {
+        await clearAllApplicants()
+        await loadApplicants()
+      } catch (error) {
+        alert('Failed to clear applicants. Please try again.')
+        console.error(error)
+      }
     }
   }
 
