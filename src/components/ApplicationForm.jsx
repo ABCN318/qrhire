@@ -70,7 +70,7 @@ function ApplicationForm({ jobId }) {
       await saveApplicant(applicant)
       setSubmitted(true)
     } catch (err) {
-      setError('Failed to submit application. Please try again.')
+      setError(err.message || 'Failed to submit application. Please try again.')
       console.error(err)
     } finally {
       setLoading(false)

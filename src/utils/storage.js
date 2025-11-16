@@ -14,7 +14,7 @@ export const saveApplicant = async (applicant) => {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({ error: 'Server error' }));
       throw new Error(error.error || 'Failed to save applicant');
     }
 
@@ -22,6 +22,10 @@ export const saveApplicant = async (applicant) => {
     return newApplicant;
   } catch (error) {
     console.error('Error saving applicant:', error);
+    // Check if it's a network error (server not running)
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
+      throw new Error('Cannot connect to server. Please make sure the backend server is running on port 3001.');
+    }
     throw error;
   }
 };
