@@ -24,7 +24,7 @@ export const saveApplicant = async (applicant) => {
     console.error('Error saving applicant:', error);
     // Check if it's a network error (server not running)
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
-      throw new Error('Cannot connect to server. Please make sure the backend server is running on port 3001.');
+      throw new Error('Cannot connect to server. Please check your connection.');
     }
     throw error;
   }
@@ -49,7 +49,7 @@ export const getApplicants = async () => {
 
 export const deleteApplicant = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/applicants/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/applicants?id=${id}`, {
       method: 'DELETE',
     });
 
